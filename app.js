@@ -1,3 +1,6 @@
+require('dotenv').config()
+const mongoose = require('mongoose')
+
 const express = require('express')
 const app = express()
 // app.set('view engine', 'ejs')
@@ -19,6 +22,18 @@ app.use(cookieParser())
 
 app.use(express.static(__dirname + '/public'))
 
+/*
+Mongo DB
+*/
+const mongoDB = process.env.MONGO_CONNECTION_STRING
+mongoose.connect(mongoDB, { useNewUrlParser: true, useUnifiedTopology: true });
+var db = mongoose.connection;
+db.on('error', console.error.bind(console, 'MongoDB connection error:'));
+
+const users = require('./Schemas/Schemas')
+// ---------------------------------------------------------
+
+
 passport.use(new LocalStrategy((username, password, done) => {
     if (username == "admin" && password == "1234") {
         user = {
@@ -36,12 +51,12 @@ passport.use(new LocalStrategy((username, password, done) => {
 
 passport.serializeUser((user, done) => {
     console.log('SerializeUser')
-    done(null, user) 
+    done(null, user)
 })
 
 passport.deserializeUser((user, done) => {
     console.log('DeserializeUser')
-    done(null, user) 
+    done(null, user)
 })
 
 app.get('/failed', (req, res) => {
@@ -55,6 +70,30 @@ app.get('/home', (req, res) => {
 
     res.status(200).json({
         messages: 'Login Success'
+    })
+})
+
+
+app.get('/data_test', async (req, res) => {
+    await users.create({
+        user_name: 'wefawadddp',
+        First_name: "KrittawatNew",
+        Last_name: 'Boon'
+    }, (err, users) => {
+        // if (err) console.log(err);
+        // else 
+        console.log("New Account Registerd.")
+    })
+
+    await users.find({}, (err, users) => {
+        if (err)
+            res.status(500).send({
+                messages: err
+            })
+        else {
+            // console.log(users)
+            res.send(users)
+        }
     })
 })
 
